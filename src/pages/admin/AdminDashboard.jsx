@@ -33,8 +33,12 @@ export default function AdminDashboard() {
     return { totalLoans, totalApplicants, totalUsers, recoveryPosition }
   }, [loans, users])
 
-  async function setStatus(row, status) {
-    await updateDoc(doc(db, 'loans', row.id), { status })
+  async function setStatus(row, status, rejectionReason = '') {
+    await updateDoc(doc(db, 'loans', row.id), {
+      status,
+      rejectionReason: status === 'rejected' ? rejectionReason : '',
+      reviewedAt: new Date().toISOString(),
+    })
   }
 
   const rows = useMemo(() => {
@@ -96,11 +100,24 @@ export default function AdminDashboard() {
             userName: r.userName,
             amount: r.amount,
             category: r.category,
+            purpose: r.purpose,
+            durationYears: r.durationYears,
+            installmentCount: r.installmentCount,
+            chargeRate: r.chargeRate,
+            rejectionReason: r.rejectionReason,
             status: r.status,
           }))}
           showActions
           onApprove={(r) => setStatus(r, 'approved')}
-          onReject={(r) => setStatus(r, 'rejected')}
+          onReject={(r) => {
+            const reason = window.prompt('Reason for rejection (required):', '')
+            if (reason === null) return
+            if (!reason.trim()) {
+              window.alert('Rejection reason is required.')
+              return
+            }
+            setStatus(r, 'rejected', reason.trim())
+          }}
         />
       </div>
     </div>

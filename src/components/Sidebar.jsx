@@ -50,7 +50,7 @@ export default function Sidebar({ role }) {
               icon={LayoutDashboard}
               label="My Dashboard"
             />
-            <Item to="/dashboard" icon={FileText} label="My Loans" />
+            <Item to="/dashboard" icon={FileText} label="Apply Loan" />
           </>
         )}
       </div>

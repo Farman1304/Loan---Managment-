@@ -4,12 +4,20 @@ import { db } from '../../firebase/firebase'
 import { useAuth } from '../../context/AuthContext'
 
 const categories = ['personal', 'business', 'home']
+const durationOptions = [2, 4, 6]
+const rateByDuration = {
+  2: 2,
+  4: 4,
+  6: 6,
+}
 
 export default function UserDashboard() {
   const { user, profile } = useAuth()
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('personal')
-  const [description, setDescription] = useState('')
+  const [purpose, setPurpose] = useState('')
+  const [durationYears, setDurationYears] = useState(2)
+  const [installmentCount, setInstallmentCount] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [loans, setLoans] = useState([])
@@ -36,6 +44,30 @@ export default function UserDashboard() {
       setError('Please enter a valid loan amount.')
       return
     }
+    const installments = Number(installmentCount)
+    if (!Number.isInteger(installments) || installments <= 0) {
+      setError('Please enter a valid number of installments.')
+      return
+    }
+    const maxInstallments = Number(durationYears) * 12
+    if (installments > maxInstallments) {
+      setError(`Installments cannot exceed ${maxInstallments} for a ${durationYears}-year duration.`)
+      return
+    }
+    if (!purpose.trim()) {
+      setError('Please provide loan purpose.')
+      return
+    }
+    if (category !== 'home') {
+      setError('Only Home Loan applications are allowed.')
+      return
+    }
+
+    const chargeRate = rateByDuration[durationYears]
+    const serviceCharge = (n * chargeRate) / 100
+    const totalPayable = n + serviceCharge
+    const installmentAmount = totalPayable / installments
+
     setBusy(true)
     try {
       await addDoc(collection(db, 'loans'), {
@@ -43,19 +75,30 @@ export default function UserDashboard() {
         userName,
         amount: n,
         category,
-        description,
+        purpose: purpose.trim(),
+        durationYears,
+        installmentCount: installments,
+        chargeRate,
+        serviceCharge,
+        totalPayable,
+        installmentAmount,
         status: 'pending',
+        rejectionReason: '',
         createdAt: serverTimestamp(),
       })
       setAmount('')
-      setCategory('personal')
-      setDescription('')
+      setCategory('home')
+      setPurpose('')
+      setDurationYears(2)
+      setInstallmentCount('')
     } catch (err) {
       setError(err?.message || 'Could not submit application')
     } finally {
       setBusy(false)
     }
   }
+
+  const installmentHint = Number(durationYears) * 12
 
   return (
     <div className="space-y-6">
@@ -83,7 +126,7 @@ export default function UserDashboard() {
             />
           </div>
           <div>
-            <div className="label">Category</div>
+            <div className="label">Loan Type</div>
             <select
               className="input mt-2"
               value={category}
@@ -95,14 +138,47 @@ export default function UserDashboard() {
                 </option>
               ))}
             </select>
+            <p className="mt-2 text-xs text-slate-400">
+              Policy: only Home Loan applications are accepted.
+            </p>
           </div>
+
+          <div>
+            <div className="label">Duration (Years)</div>
+            <select
+              className="input mt-2"
+              value={durationYears}
+              onChange={(e) => setDurationYears(Number(e.target.value))}
+            >
+              {durationOptions.map((years) => (
+                <option key={years} value={years}>
+                  {years} years ({rateByDuration[years]}% charge)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className="label">Installments</div>
+            <input
+              className="input mt-2"
+              value={installmentCount}
+              onChange={(e) => setInstallmentCount(e.target.value)}
+              placeholder={`e.g. ${installmentHint}`}
+              inputMode="numeric"
+            />
+            <p className="mt-2 text-xs text-slate-400">
+              Maximum {installmentHint} installments for selected duration.
+            </p>
+          </div>
+
           <div className="md:col-span-2">
-            <div className="label">Description</div>
+            <div className="label">Purpose</div>
             <textarea
               className="input mt-2 min-h-28 resize-y"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Short description..."
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              placeholder="Why do you need this home loan?"
             />
           </div>
 
@@ -136,8 +212,12 @@ export default function UserDashboard() {
               <thead className="bg-slate-900">
                 <tr className="text-slate-300">
                   <th className="px-4 py-3 font-semibold">Loan Amount</th>
-                  <th className="px-4 py-3 font-semibold">Category</th>
+                  <th className="px-4 py-3 font-semibold">Purpose</th>
+                  <th className="px-4 py-3 font-semibold">Duration</th>
+                  <th className="px-4 py-3 font-semibold">Installments</th>
+                  <th className="px-4 py-3 font-semibold">Charge</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Admin Comment</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
@@ -149,13 +229,25 @@ export default function UserDashboard() {
                           ? l.amount.toLocaleString()
                           : l.amount}
                       </td>
-                      <td className="px-4 py-3 capitalize">{l.category}</td>
+                      <td className="px-4 py-3">{l.purpose || '—'}</td>
+                      <td className="px-4 py-3">
+                        {l.durationYears ? `${l.durationYears} years` : '—'}
+                      </td>
+                      <td className="px-4 py-3">{l.installmentCount || '—'}</td>
+                      <td className="px-4 py-3">
+                        {typeof l.chargeRate === 'number' ? `${l.chargeRate}%` : '—'}
+                      </td>
                       <td className="px-4 py-3 capitalize">{l.status}</td>
+                      <td className="px-4 py-3">
+                        {l.status === 'rejected' && l.rejectionReason
+                          ? l.rejectionReason
+                          : '—'}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td className="px-4 py-10 text-center text-slate-400" colSpan={3}>
+                    <td className="px-4 py-10 text-center text-slate-400" colSpan={7}>
                       No applications yet.
                     </td>
                   </tr>

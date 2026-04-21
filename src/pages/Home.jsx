@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ShieldCheck, TrendingUp, Wallet } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 function Feature({ icon, title, desc }) {
   const IconComponent = icon
@@ -20,6 +21,8 @@ function Feature({ icon, title, desc }) {
 }
 
 export default function Home() {
+  const { user } = useAuth()
+
   return (
     <div className="space-y-10">
       <section className="card overflow-hidden">
@@ -36,12 +39,20 @@ export default function Home() {
               Admins can approve or reject in real-time with Firestore updates.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link to="/signup" className="btn-primary">
-                Create account
-              </Link>
-              <Link to="/login" className="btn-secondary">
-                Login
-              </Link>
+              {user ? (
+                <Link to="/portal" className="btn-primary">
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link to="/signup" className="btn-primary">
+                    Create account
+                  </Link>
+                  <Link to="/login" className="btn-secondary">
+                    Login
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 

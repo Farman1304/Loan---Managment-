@@ -22,8 +22,13 @@ export default function LoanTable({
             <tr className="text-slate-300">
               <th className="px-4 py-3 font-semibold">User Name</th>
               <th className="px-4 py-3 font-semibold">Loan Amount</th>
-              <th className="px-4 py-3 font-semibold">Category</th>
+              <th className="px-4 py-3 font-semibold">Loan Type</th>
+              <th className="px-4 py-3 font-semibold">Purpose</th>
+              <th className="px-4 py-3 font-semibold">Duration</th>
+              <th className="px-4 py-3 font-semibold">Installments</th>
+              <th className="px-4 py-3 font-semibold">Charge</th>
               <th className="px-4 py-3 font-semibold">Status</th>
+              <th className="px-4 py-3 font-semibold">Reject Reason</th>
               {showActions ? (
                 <th className="px-4 py-3 text-right font-semibold">Actions</th>
               ) : null}
@@ -38,9 +43,18 @@ export default function LoanTable({
                     {typeof r.amount === 'number' ? r.amount.toLocaleString() : r.amount}
                   </td>
                   <td className="px-4 py-3 capitalize">{r.category}</td>
+                  <td className="px-4 py-3">{r.purpose || '—'}</td>
+                  <td className="px-4 py-3">
+                    {r.durationYears ? `${r.durationYears} years` : '—'}
+                  </td>
+                  <td className="px-4 py-3">{r.installmentCount || '—'}</td>
+                  <td className="px-4 py-3">
+                    {typeof r.chargeRate === 'number' ? `${r.chargeRate}%` : '—'}
+                  </td>
                   <td className="px-4 py-3">
                     <span className={badge(r.status)}>{r.status}</span>
                   </td>
+                  <td className="px-4 py-3">{r.rejectionReason || '—'}</td>
                   {showActions ? (
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
@@ -67,7 +81,7 @@ export default function LoanTable({
               <tr>
                 <td
                   className="px-4 py-10 text-center text-slate-400"
-                  colSpan={showActions ? 5 : 4}
+                  colSpan={showActions ? 10 : 9}
                 >
                   No applications yet.
                 </td>

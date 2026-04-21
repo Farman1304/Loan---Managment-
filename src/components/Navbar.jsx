@@ -30,15 +30,22 @@ export default function Navbar() {
   const navigate = useNavigate()
   const { user, profile, logout } = useAuth()
 
-  const links = useMemo(
-    () => [
+  const links = useMemo(() => {
+    const baseLinks = [
       { to: '/', label: 'Home' },
       { to: '/contact', label: 'Contact' },
       { to: '/branches', label: 'Branches' },
       { to: '/about', label: 'About Us' },
-    ],
-    [],
-  )
+    ]
+
+    if (!user) return baseLinks
+
+    if (profile?.role === 'admin') {
+      return [...baseLinks, { to: '/admin', label: 'Admin Dashboard' }]
+    }
+
+    return [...baseLinks, { to: '/dashboard', label: 'Apply Loan' }]
+  }, [user, profile?.role])
 
   async function onLogout() {
     await logout()
