@@ -30,6 +30,8 @@ export default function Navbar() {
   const navigate = useNavigate()
   const { user, profile, logout } = useAuth()
 
+  const isElevatedRole = profile?.role === 'admin' || profile?.role === 'owner'
+
   const links = useMemo(() => {
     const baseLinks = [
       { to: '/', label: 'Home' },
@@ -40,12 +42,12 @@ export default function Navbar() {
 
     if (!user) return baseLinks
 
-    if (profile?.role === 'admin') {
+    if (isElevatedRole) {
       return [...baseLinks, { to: '/admin', label: 'Admin Dashboard' }]
     }
 
     return [...baseLinks, { to: '/dashboard', label: 'Apply Loan' }]
-  }, [user, profile?.role])
+  }, [user, isElevatedRole])
 
   async function onLogout() {
     await logout()
@@ -66,7 +68,7 @@ export default function Navbar() {
                 Loan Manager
               </div>
               <div className="text-xs text-slate-400">
-                {profile?.role === 'admin' ? 'Admin' : 'Fintech Portal'}
+                {isElevatedRole ? 'Admin' : 'Fintech Portal'}
               </div>
             </div>
           </Link>

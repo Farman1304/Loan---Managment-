@@ -10,18 +10,23 @@ export default function Signup() {
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('user')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setBusy(true)
     try {
       await signup({ email, password, displayName, role })
-      navigate(role === 'admin' ? '/admin' : '/dashboard', { replace: true })
+      setSuccess('Account created successfully. Redirecting...')
+      setBusy(false)
+      window.setTimeout(() => {
+        navigate('/portal', { replace: true })
+      }, 700)
     } catch (err) {
       setError(err?.message || 'Signup failed')
-    } finally {
       setBusy(false)
     }
   }
@@ -78,6 +83,7 @@ export default function Signup() {
             >
               <option value="user">User</option>
               <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
             </select>
             <div className="mt-2 text-xs text-amber-200/80">
               For production apps, do not allow self-select admin.
@@ -87,6 +93,11 @@ export default function Signup() {
           {error ? (
             <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">
               {error}
+            </div>
+          ) : null}
+          {success ? (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+              {success}
             </div>
           ) : null}
 

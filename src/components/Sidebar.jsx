@@ -23,6 +23,8 @@ function Item({ to, icon, label }) {
 }
 
 export default function Sidebar({ role }) {
+  const isElevatedRole = role === 'admin' || role === 'owner'
+
   return (
     <aside className="card hidden h-[calc(100svh-6rem)] w-64 shrink-0 p-3 md:block">
       <div className="mb-3 px-2 text-xs font-bold uppercase tracking-wide text-slate-400">
@@ -30,7 +32,7 @@ export default function Sidebar({ role }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        {role === 'admin' ? (
+        {isElevatedRole ? (
           <>
             <Item
               to="/admin"

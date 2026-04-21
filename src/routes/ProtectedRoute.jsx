@@ -1,6 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+const isElevatedRole = (value) => value === 'admin' || value === 'owner'
+
 export default function ProtectedRoute({ role }) {
   const { user, profile, loading } = useAuth()
 
@@ -14,8 +16,16 @@ export default function ProtectedRoute({ role }) {
 
   if (!user) return <Navigate to="/login" replace />
 
-  if (role && profile?.role !== role) {
-    return <Navigate to={profile?.role === 'admin' ? '/admin' : '/dashboard'} replace />
+  if (role) {
+    if (role === 'admin' && isElevatedRole(profile?.role)) {
+      return <Outlet />
+    }
+    if (role !== 'admin' && profile?.role !== role) {
+      return <Navigate to={isElevatedRole(profile?.role) ? '/admin' : '/dashboard'} replace />
+    }
+    if (role === 'admin' && !isElevatedRole(profile?.role)) {
+      return <Navigate to="/dashboard" replace />
+    }
   }
 
   return <Outlet />

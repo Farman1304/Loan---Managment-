@@ -11,6 +11,7 @@ import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase/firebase'
 
 const AuthContext = createContext(null)
+const allowedRoles = new Set(['user', 'admin', 'owner'])
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -42,11 +43,13 @@ export function AuthProvider({ children }) {
       await updateProfile(cred.user, { displayName })
     }
 
+    const normalizedRole = allowedRoles.has(role) ? role : 'user'
+
     const userDoc = {
       userId: cred.user.uid,
       email,
       displayName: displayName || '',
-      role: role === 'admin' ? 'admin' : 'user',
+      role: normalizedRole,
       createdAt: serverTimestamp(),
     }
     await setDoc(doc(db, 'users', cred.user.uid), userDoc, { merge: true })

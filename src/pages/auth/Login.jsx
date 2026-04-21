@@ -8,18 +8,23 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setBusy(true)
     try {
       await login({ email, password })
-      navigate('/portal', { replace: true })
+      setSuccess('Login successful. Redirecting...')
+      setBusy(false)
+      window.setTimeout(() => {
+        navigate('/portal', { replace: true })
+      }, 500)
     } catch (err) {
       setError(err?.message || 'Login failed')
-    } finally {
       setBusy(false)
     }
   }
@@ -57,6 +62,11 @@ export default function Login() {
           {error ? (
             <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">
               {error}
+            </div>
+          ) : null}
+          {success ? (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+              {success}
             </div>
           ) : null}
 
